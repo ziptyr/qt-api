@@ -6,6 +6,7 @@ var logger = require('morgan');
 var bookRouter = require('./routes/book')
 var userRouter = require('./routes/user')
 var loginRouter = require('./routes/login')
+var carRouter = require('./routes/car')
 
 const dotenv = require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -43,5 +44,6 @@ app.use('/login', loginRouter);//login is not protected
 app.use(authenticateToken);
 
 app.use('/book', bookRouter);
+app.use('/car', carRouter);
 
 module.exports = app;

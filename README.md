@@ -1,9 +1,7 @@
 # qt-api
 
-CREATE DATABASE qt_api;
-USE qt_api;
-CREATE TABLE car (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    branch VARCHAR(100) NOT NULL,
-    model VARCHAR(100) NOT NULL
+CREATE TABLE car(
+    id_car INT primary key auto_increment,
+    branch VARCHAR(255),
+    model VARCHAR(255)
 );
