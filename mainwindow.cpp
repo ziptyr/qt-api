@@ -11,69 +11,126 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->action_Quit, SIGNAL(triggered()), this, SLOT(close()));
 
-    // QString webToken = "HapPaB54t0zf4M1xbgVioe67+xQ1GolcCWWC8jbsOwbQNfWuC4YYG4zVQTYO4b+DoatQRD4VUxQ62n0gcc1frQ==";
-    QString webToken = this->login();
+    connect(ui->pushButton_show_carAll, &QPushButton::clicked, this, &MainWindow::getCarAll);
+    connect(ui->pushButton_show_carId, &QPushButton::clicked, this, &MainWindow::getCarId);
+    connect(ui->pushButton_create, &QPushButton::clicked, this, &MainWindow::postCar);
+    connect(ui->pushButton_edit, &QPushButton::clicked, this, &MainWindow::putCar);
+    connect(ui->pushButton_delete, &QPushButton::clicked, this, &MainWindow::deleteCar);
+}
 
-    QString site_url="http://localhost:3000/book/1";
+void MainWindow::getCarAll()
+{
+    ui->textEditResults->setText("");
+
+    QString site_url="http://localhost:3000/car";
+    requestGet(site_url);
+}
+
+void MainWindow::deleteCar()
+{
+    ui->textEditResults->setText("");
+
+    QString site_url="http://localhost:3000/car/" + ui->spinBox_delete_carId->text();
+    requestDelete(site_url);
+}
+
+void MainWindow::getCarId()
+{
+    ui->textEditResults->setText("");
+
+    QString site_url="http://localhost:3000/car/" + ui->spinBox_show_carId->text();
+    requestGet(site_url);
+}
+
+void MainWindow::postCar()
+{
+    QJsonObject jsonObj;
+    jsonObj.insert("branch", ui->lineEdit_create_create_branch->text());
+    jsonObj.insert("model", ui->lineEdit_create_create_model->text());
+
+    QString site_url="http://localhost:3000/car/";
+    requestPost(site_url, jsonObj);
+}
+
+void MainWindow::putCar()
+{
+    QJsonObject jsonObj;
+    jsonObj.insert("branch", ui->lineEdit_edit_branch->text());
+    jsonObj.insert("model", ui->lineEdit_edit_model->text());
+
+    QString site_url="http://localhost:3000/car/" + ui->spinBox_edit_carId->text();
+    requestPut(site_url, jsonObj);
+}
+
+void MainWindow::requestDelete(QString site_url)
+{
     QNetworkRequest request(site_url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    //WEBTOKEN ALKU
-    //Onnistuneen loginin seurauksena saadaan arvo muuttujalle webToken, jonka
-    //tietotyyppi on QByteArray ja sen eteen asetetaan merkkijono Bearer
-    QByteArray myToken="Bearer "+webToken.toUtf8();
-    request.setRawHeader(QByteArray("Authorization"),(myToken));
-    //WEBTOKEN LOPPU
 
     manager = new QNetworkAccessManager(this);
-    connect(manager, &QNetworkAccessManager::finished, this, &MainWindow::getBookSlot);
+    connect(manager, &QNetworkAccessManager::finished, this, &MainWindow::outputReplyString);
+    reply = manager->deleteResource(request);
+}
+
+void MainWindow::requestGet(QString site_url)
+{
+    QNetworkRequest request(site_url);
+
+    manager = new QNetworkAccessManager(this);
+    connect(manager, &QNetworkAccessManager::finished, this, &MainWindow::outputReplyArray);
     reply = manager->get(request);
 }
 
-void MainWindow::login() {
-    QString url="http://localhost:3000/login";
-    QNetworkRequest request(url);
-
+void MainWindow::requestPut(QString site_url, QJsonObject jsonObj)
+{
+    QNetworkRequest request(site_url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    QJsonObject json;
-    json.insert("username", "test_user");
-    json.insert("password", "test123");
-    QByteArray jsonData = QJsonDocument(json).toJson();
-
-    QNetworkAccessManager *networkManager = new QNetworkAccessManager(this);
-    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::getLogin);
-    QNetworkReply *reply = networkManager->post(request, jsonData);
+    manager = new QNetworkAccessManager(this);
+    connect(manager, &QNetworkAccessManager::finished, this, &MainWindow::outputReplyString);
+    reply = manager->put(request, QJsonDocument(jsonObj).toJson());
 }
 
+void MainWindow::requestPost(QString site_url, QJsonObject jsonObj)
+{
+    QNetworkRequest request(site_url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-QString MainWindow::getLogin(QNetworkReply *reply) {
-    QByteArray response_data=reply->readAll();
-
-    return QString(response_data);
+    manager = new QNetworkAccessManager(this);
+    connect(manager, &QNetworkAccessManager::finished, this, &MainWindow::outputReplyString);
+    reply = manager->post(request, QJsonDocument(jsonObj).toJson());
 }
 
-
-void MainWindow::getBookSlot(QNetworkReply *reply)
+void MainWindow::outputReplyArray(QNetworkReply *reply)
 {
     QByteArray response_data=reply->readAll();
     QJsonDocument json_doc = QJsonDocument::fromJson(response_data);
     QJsonObject json_obj = json_doc.object();
 
-    QString book;
+    QString output_string;
 
-    book=QString::number(json_obj["id_book"].toInt())+","+json_obj["name"].toString()+","+json_obj["author"].toString();
+    QJsonArray json_array = json_doc.array();
 
-    // foreach (const QJsonValue &value, json_array) {
-    //     QJsonObject json_obj = value.toObject();
-    //     book+=QString::number(json_obj["id_book"].toInt())+","+json_obj["name"].toString()+","+json_obj["author"].toString()+"\r";
-    // }
+    foreach (const QJsonValue &value, json_array) {
+        QJsonObject json_obj = value.toObject();
+        output_string+=QString::number(json_obj["id_car"].toInt())+","+json_obj["branch"].toString()+","+json_obj["model"].toString()+"\r";
+    }
 
-    ui->textEditResults->setText(book);
+    ui->textEditResults->setText(output_string);
 
     reply->deleteLater();
     manager->deleteLater();
 }
+
+void MainWindow::outputReplyString(QNetworkReply *reply)
+{
+    QByteArray response_data=reply->readAll();
+
+    ui->textEditResults->setText(response_data);
+
+    reply->deleteLater();
+    manager->deleteLater();
+}
+
 
 
 MainWindow::~MainWindow()

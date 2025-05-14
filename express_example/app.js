@@ -39,11 +39,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/user', userRouter);
+app.use('/car', carRouter);
 
 app.use('/login', loginRouter);//login is not protected 
 app.use(authenticateToken);
 
 app.use('/book', bookRouter);
-app.use('/car', carRouter);
 
 module.exports = app;

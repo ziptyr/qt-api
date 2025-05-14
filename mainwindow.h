@@ -6,6 +6,7 @@
 #include <QNetworkAccessManager>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,11 +22,23 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void getCarAll();
+    void getCarId();
+    void postCar();
+    void putCar();
+    void deleteCar();
+
+    void requestGet(QString site_url);
+    void requestPost(QString site_url, QJsonObject jsonObj);
+    void requestPut(QString site_url, QJsonObject jsonObj);
+    void requestDelete(QString site_url);
+
+    void outputReplyArray(QNetworkReply *reply);
+    void outputReplyString(QNetworkReply *reply);
+
 private:
     Ui::MainWindow *ui;
-    void getBookSlot(QNetworkReply *reply);
-    void makeRequest();
-    void login();
 
     QString webToken;
 
